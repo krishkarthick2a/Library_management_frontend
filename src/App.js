@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { addBook, getBookInfo, checkOut, addUser, returnBook, getUserBorrowedBooks } from './LibraryContract';
+import { addBook, getBookInfo, checkOut, addUser, returnBook, getUserBorrowedBooks, getBalance, transferToken } from './LibraryContract';
 
 function App() {
   const [bookId, setBookId] = useState('');
   const [bookTitle, setBookTitle] = useState('');
+  const [bookPrice, setBookPrice] = useState('');
   const [bookInfo, setBookInfo] = useState({});
   const [walletConnected, setWalletConnected] = useState(false);
   const [provider, setProvider] = useState(null);
   const [userAddress, setUserAddress] = useState('');
   const [userName, setUserName] = useState('');
+  const [userId, setUserId] = useState(''); // New state for user ID
+  const [initialSupply, setInitialSupply] = useState(''); // New state for initial supply
   const [borrowedBooks, setBorrowedBooks] = useState([]);
   const [userAddr, setUserAddr] = useState("");
   const [borrowedBooksInfo, setBorrowedBooksInfo] = useState([]);
+
+  //erc20
+  const [tokenBalanceAddress, setTokenBalanceAddress] = useState('');
+  const [transferToAddress, setTransferToAddress] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [balance, setBalance] = useState('');
 
   useEffect(() => {
     console.log("use effect ");
@@ -22,13 +31,12 @@ function App() {
     try {
       if(window.ethereum){
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      setUserAddress(accounts);
-      console.log("connected to account :", accounts);
-      // const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const provider = new ethers.BrowserProvider(window.ethereum);
+        setUserAddress(accounts[0]);
+        console.log("connected to account :", accounts[0]);
+        const provider = new ethers.BrowserProvider(window.ethereum);
 
-      setProvider(provider);
-      setWalletConnected(true);
+        setProvider(provider);
+        setWalletConnected(true);
       }else{
         alert("Please download metamask");
       }
@@ -39,7 +47,7 @@ function App() {
 
   const handleAddBook = async () => {
     try{
-      await addBook(bookTitle);
+      await addBook(bookTitle, bookPrice);
     }catch (error) {
       alert('There was error in adding a book, try again.');
       console.error('Error adding a book', error);
@@ -48,46 +56,44 @@ function App() {
 
   const handleGetBookInfo = async () => {
     try{
-    if(bookId == ''){
-      alert("Enter a valid Book Id");
-    }else{
-      const info = await getBookInfo(bookId);
-      console.log("info : ", info);
-      setBookInfo(info);
-    }} catch (error) {
+      if(bookId === ''){
+        alert("Enter a valid Book Id");
+      }else{
+        const info = await getBookInfo(bookId);
+        console.log("info : ", info);
+        setBookInfo(info);
+      }
+    } catch (error) {
       alert("Error in fetching the book details,  try again");
       console.error('Error in getting book info', error);
     }
   };
 
   const handleCheckOut = async () => {
-    try
-    {
+    try {
       const checkout = await checkOut(bookId);
       alert("Successfully checked out!...");
-    }catch(error){
+    } catch(error) {
       console.log("error checkout :", error);
       alert("Error in checkout, try again...");
     }
-
-    // setBookInfo(checkOut);
   }
 
   const handleAddUser = async () => {
-    try{
-      await addUser(userName);
-      setUserName(userName);
+    try {
+      await addUser(userName, userId, initialSupply); // Pass user ID and initial supply to addUser function
+      setUserName(userName, userId, initialSupply);
       alert("Successfully added the user : ");
-    }catch(error){
+    } catch(error) {
       alert("Error in adding user, try again...");
     }
   }
 
   const handleReturnBook = async () => {
-    try{
-      await returnBook(bookId);
+    try {
+      await returnBook(bookId, );
       alert("Successfully returned book");
-    }catch(error){
+    } catch(error) {
       alert("Error in returning book...");
     }
   }
@@ -113,27 +119,53 @@ function App() {
       alert("Error in fetching the data...");
     }
   }
-  
+
+  //erc20
+  const handleGetTokenBalance = async () => {
+    try {
+      // console.log("test : ", await getBalance(tokenBalanceAddress));
+      setBalance(await getBalance(tokenBalanceAddress));
+      console.log("user balance : ", balance);
+    } catch (error) {
+      console.error('Error fetching token balance:', error);
+      alert('Error fetching token balance. Please try again.');
+    }
+  };
+
+  // New function to transfer tokens to another account
+  const handleTransferTokens = async () => {
+    try {
+      // console.log("user address : ", userAddress);
+      await transferToken(userAddress, transferToAddress, transferAmount);
+      alert(`Successfully transferred ${transferAmount} tokens to ${transferToAddress}`);
+    } catch (error) {
+      console.error('Error transferring tokens:', error);
+      alert('Error transferring tokens. Please try again.');
+    }
+  };
 
   return (
     <div style={{ backgroundColor: '#0c0942', padding: '20px' }}>
       <header style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
         <h1 style={{color: '#94e8ff', textAlign: 'center'}}>Library Management DApp </h1>
         <div style={{textAlign: 'right'}}>
-        {!walletConnected ? (
-          <button style={{padding: '10px 20px', backgroundColor: '#6760e6', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={connectWallet}>Connect Wallet</button>
-        ) : (
-          <b style={{color: '#fff'}}>{userAddress}</b>
-        )}
+          {!walletConnected ? (
+            <button style={{padding: '10px 20px', backgroundColor: '#6760e6', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={connectWallet}>Connect Wallet</button>
+          ) : (
+            <b style={{color: '#fff'}}>{userAddress}</b>
+          )}
         </div>
       </header>
       <div style={{ marginBottom: '20px' }}>
         <input type="text" placeholder="Book Title" value={bookTitle} onChange={(e) => setBookTitle(e.target.value)} />
+        <input type="number" placeholder="Price" value={bookPrice} onChange={(e) => setBookPrice(e.target.value)} />
         <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleAddBook}>Add Book</button>
       </div>
       <div style={{ marginBottom: '20px' }}>
         <input type="text" placeholder="User Name" value={userName} onChange={(e) => setUserName(e.target.value)} />
-        <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleAddUser}>Add User</button> {/* New button for adding user */}
+        <input type="text" placeholder="User ID" value={userId} onChange={(e) => setUserId(e.target.value)} /> {/* Input for user ID */}
+        <input type="number" placeholder="Initial Supply" value={initialSupply} onChange={(e) => setInitialSupply(e.target.value)} /> {/* Input for initial supply */}
+        <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleAddUser}>Add User</button>
       </div>
       <div style={{ marginBottom: '20px' }}>
         <input type="text" placeholder="Book ID" value={bookId} onChange={(e) => setBookId(e.target.value)} />
@@ -157,6 +189,16 @@ function App() {
             <li key={index}>{bookInfo}</li>
           ))}
         </ul>
+      </div>
+      <div style={{ marginBottom: '20px' }}>
+        <input type="text" placeholder="Token Balance Address" value={tokenBalanceAddress} onChange={(e) => setTokenBalanceAddress(e.target.value)} />
+        <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleGetTokenBalance}>Get Token Balance</button>
+        <h2 style={{color: '#adacad'}}>Balance: {Number(balance) / (10 ** 18)}</h2>
+      </div>
+      <div style={{ marginBottom: '20px' }}>
+        <input type="text" placeholder="Transfer To Address" value={transferToAddress} onChange={(e) => setTransferToAddress(e.target.value)} />
+        <input type="number" placeholder="Transfer Amount" value={transferAmount} onChange={(e) => setTransferAmount(e.target.value)} />
+        <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleTransferTokens}>Transfer Tokens</button>
       </div>
     </div>
   );
