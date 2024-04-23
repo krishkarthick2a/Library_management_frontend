@@ -21,29 +21,37 @@ export const getBookInfo = async (bookId) => {
   return await contractInstance.getBookInfo(bookId);
 };
 
+export const getBookPrice = async (bookId) => {
+  const bookPrice = await contractInstance.books(bookId);
+  console.log("price called");
+  return Number(bookPrice.price);
+}
+
 export const addBook = async (title, bookPrice) => {
-  console.log("method addbook called ", title);
-  console.log("Book price inside : ", bookPrice);
-  return await contractInstance.addBook(title, parseInt(Number(bookPrice * 10 ** 18)));
-  // console.log("test : ", await contractInstance.interface);
-  // await transaction.wait(); // Wait for transaction to be mined
+  const price = parseUnits(bookPrice, 18);
+  console.log("method addbook called : ", title);
+  console.log("Book price inside : ", price);
+  return await contractInstance.addBook(title, price);
 };
 
 export const checkOut = async (bookId) => {
   console.log("test : ", bookId);
+  const bookprice = await contractInstance.books(bookId);
+  console.log("book details inside issue book : ", bookprice.price);
+  await libToken.approve(contractInstance.target, bookprice.price);
   const transaction = await contractInstance.BookIssue(bookId);
   // await transaction.wait(); // Wait for transaction to be mined
 };
 
 export const addUser = async (name, userId, initialSupply) => {
+  const initSupply = parseUnits(initialSupply, 18);
   console.log("ini sup : ", name);
   console.log("user id : ", userId);
-  console.log("contract addr : ", initialSupply);
+  console.log("contract addr : ", initSupply);
   const maxBal = await libToken.balanceOf(signer.address);
   console.log("max bal : ", maxBal);
-  await libToken.approve(contractInstance.target, parseInt(Number(maxBal)));
-  const transaction = await contractInstance.addUser(name, userId, parseInt(Number(initialSupply)));
-  // await transaction.wait(); // Wait for transaction to be mined
+  await libToken.approve(contractInstance.target, maxBal);
+  await contractInstance.addUser(name, userId, initSupply);
 };
 
 export const returnBook = async (bookId) => {
@@ -65,12 +73,8 @@ export const getBalance = async (userId) => {
 }
 
 export const transferToken = async (userAddress, transferToAddress, transferAmount) => {
-  console.log("transfe amount : ", transferToAddress);
-  const appr = await libToken.approve(transferToAddress, libToken.totalSupply());
-  console.log("allowance : ", await libToken.allowance(userAddress, "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"));
-  // await libToken.transferFrom(userAddress, transferToAddress, Number(transferAmount));
-  // const value = (transferAmount * 10 ** 18);
-  // let amt = transferAmount * 10 ** 18;
-  await libToken.transfer(transferToAddress, Number(transferAmount));
+  const amt = parseUnits(transferAmount, 18);
+  console.log("amount to transfer : ", amt);
+  await libToken.transfer(transferToAddress, amt);
   return true;
 }

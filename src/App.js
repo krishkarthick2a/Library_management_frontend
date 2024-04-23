@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { addBook, getBookInfo, checkOut, addUser, returnBook, getUserBorrowedBooks, getBalance, transferToken } from './LibraryContract';
+import { addBook, getBookInfo, checkOut, addUser, returnBook, getUserBorrowedBooks, getBalance, transferToken, getBookPrice } from './LibraryContract';
 
 function App() {
   const [bookId, setBookId] = useState('');
@@ -22,6 +22,7 @@ function App() {
   const [transferToAddress, setTransferToAddress] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
   const [balance, setBalance] = useState('');
+  const [bPrice, setBPrice] = useState('');
 
   useEffect(() => {
     console.log("use effect ");
@@ -47,6 +48,7 @@ function App() {
 
   const handleAddBook = async () => {
     try{
+      // console.log("inside add book : ", bookTitle, bookPrice);
       await addBook(bookTitle, bookPrice);
     }catch (error) {
       alert('There was error in adding a book, try again.');
@@ -62,6 +64,9 @@ function App() {
         const info = await getBookInfo(bookId);
         console.log("info : ", info);
         setBookInfo(info);
+        const price = await getBookPrice(bookId);
+        setBPrice(price / 10 ** 18);
+        console.log("Bprice : ", bPrice);
       }
     } catch (error) {
       alert("Error in fetching the book details,  try again");
@@ -177,6 +182,7 @@ function App() {
         {/* <pre>{JSON.stringify(bookInfo, null, 2)}</pre> */}
         <pre style={{color: '#fff'}}><span style={{color: "#cfcccf", fontFamily: 'sans-serif'}}>Book name : </span>{bookInfo[1]}</pre>
         <pre style={{color: '#fff'}}><span style={{color: "#cfcccf", fontFamily: 'sans-serif'}}>Current holder : </span>{bookInfo[2]}</pre>
+        <pre style={{color: '#fff'}}><span style={{color: "#cfcccf", fontFamily: 'sans-serif'}}>Price : </span>{bPrice}</pre>
       </div>
       <div style={{ marginBottom: '20px' }}>
         <input type="text" placeholder="User Address" value={userAddr} onChange={(e) => setUserAddr(e.target.value)} />
