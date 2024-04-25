@@ -1,4 +1,4 @@
-import {ethers, parseUnits} from 'ethers';
+import {ethers, parseEther, parseUnits} from 'ethers';
 import LibraryContractABI from './LibraryContractABI.json';
 import tokenABI from './TokenContractABI.json';
 
@@ -23,7 +23,6 @@ export const getBookInfo = async (bookId) => {
 
 export const getBookPrice = async (bookId) => {
   const bookPrice = await contractInstance.books(bookId);
-  console.log("price called");
   return Number(bookPrice.price);
 }
 
