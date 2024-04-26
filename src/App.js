@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
+import { ethers, parseEther, formatEther, formatUnits } from 'ethers';
 import { addBook, getBookInfo, checkOut, addUser, returnBook, getUserBorrowedBooks, getBalance, transferToken, getBookPrice } from './LibraryContract';
 
 function App() {
@@ -66,6 +66,8 @@ function App() {
         setBookInfo(info);
         const price = await getBookPrice(bookId);
         setBPrice(price / 10 ** 18);
+        // console.log("new : ", formatUnits(price, "wei"));
+        // console.log("new : ", parseEther(bPrice.toString()));
         console.log("Bprice : ", bPrice);
       }
     } catch (error) {
@@ -129,7 +131,8 @@ function App() {
   const handleGetTokenBalance = async () => {
     try {
       // console.log("test : ", await getBalance(tokenBalanceAddress));
-      setBalance(await getBalance(tokenBalanceAddress));
+      const bal = await getBalance(tokenBalanceAddress);
+      setBalance(formatEther(bal));
       console.log("user balance : ", balance);
     } catch (error) {
       console.error('Error fetching token balance:', error);
@@ -199,7 +202,7 @@ function App() {
       <div style={{ marginBottom: '20px' }}>
         <input type="text" placeholder="Token Balance Address" value={tokenBalanceAddress} onChange={(e) => setTokenBalanceAddress(e.target.value)} />
         <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleGetTokenBalance}>Get Token Balance</button>
-        <h2 style={{color: '#adacad'}}>Balance: {Number(balance) / (10 ** 18)}</h2>
+        <h2 style={{color: '#adacad'}}>Balance: {Number(balance)}</h2>
       </div>
       <div style={{ marginBottom: '20px' }}>
         <input type="text" placeholder="Transfer To Address" value={transferToAddress} onChange={(e) => setTransferToAddress(e.target.value)} />
