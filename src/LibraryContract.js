@@ -2,6 +2,7 @@ import {ethers, parseEther, parseUnits} from 'ethers';
 import LibraryContractABI from './LibraryContractABI.json';
 import tokenABI from './TokenContractABI.json';
 
+//test 27/4/24
 // const provider2 = new ethers.providers.JsonRpcProvider(); // Connect to Ethereum node
 const provider = new ethers.BrowserProvider(window.ethereum); // Connect to Ethereum node
 const signer = await provider.getSigner();

@@ -28,6 +28,7 @@ function App() {
     console.log("use effect ");
   });
 
+  //test 27/4/24
   const connectWallet = async () => {
     try {
       if(window.ethereum){
