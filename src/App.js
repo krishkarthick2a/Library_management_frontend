@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ethers, parseEther, formatEther, formatUnits } from 'ethers';
-import { addBook, getBookInfo, checkOut, addUser, returnBook, getUserBorrowedBooks, getBalance, transferToken, getBookPrice } from './LibraryContract';
+// import nodemailer from 'nodemailer';
+import { addBook, getBookInfo, checkOut, addUser, returnBook, getUserBorrowedBooks, getBalance, transferToken, getBookPrice, getMailid } from './LibraryContract';
+import emailjs from '@emailjs/browser';
+
 
 function App() {
   const [bookId, setBookId] = useState('');
@@ -16,6 +19,7 @@ function App() {
   const [borrowedBooks, setBorrowedBooks] = useState([]);
   const [userAddr, setUserAddr] = useState("");
   const [borrowedBooksInfo, setBorrowedBooksInfo] = useState([]);
+  const [mailId, setMailId] = useState('');
 
   //erc20
   const [tokenBalanceAddress, setTokenBalanceAddress] = useState('');
@@ -24,8 +28,11 @@ function App() {
   const [balance, setBalance] = useState('');
   const [bPrice, setBPrice] = useState('');
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     console.log("use effect ");
+    emailjs.init("DjaBDDmfTRcep4wj1");
   });
 
   //test 27/4/24
@@ -80,6 +87,8 @@ function App() {
   const handleCheckOut = async () => {
     try {
       const checkout = await checkOut(bookId);
+      let toMailAddress = await getMailid(userAddress);
+      await sendMail(toMailAddress);
       alert("Successfully checked out!...");
     } catch(error) {
       console.log("error checkout :", error);
@@ -89,8 +98,9 @@ function App() {
 
   const handleAddUser = async () => {
     try {
-      await addUser(userName, userId, initialSupply); // Pass user ID and initial supply to addUser function
-      setUserName(userName, userId, initialSupply);
+      console.log("mail id in handler : ", mailId);
+      await addUser(userName, userId, initialSupply, mailId); // Pass user ID and initial supply to addUser function
+      setUserName(userName, userId, initialSupply, mailId);
       alert("Successfully added the user : ");
     } catch(error) {
       alert("Error in adding user, try again...");
@@ -151,7 +161,28 @@ function App() {
       console.error('Error transferring tokens:', error);
       alert('Error transferring tokens. Please try again.');
     }
+    
   };
+
+  async function sendMail(toMailAddress){
+    console.log("inside send mail");
+        const serviceId = "service_lxkhfj8";
+        const templateId = "template_hfw93l4";
+        try {
+          setLoading(true);
+          await emailjs.send(serviceId, templateId, {
+            from_name: "Library managment",
+            to_name: "test to name",
+            // to_mail: "krishkarthick2a@gmail.com"
+            to_mail: toMailAddress
+          });
+          alert("email successfully sent check inbox");
+        } catch (error) {
+          console.log(error);
+        } finally {
+          setLoading(false);
+        }
+  }
 
   return (
     <div style={{ backgroundColor: '#0c0942', padding: '20px' }}>
@@ -174,6 +205,7 @@ function App() {
         <input type="text" placeholder="User Name" value={userName} onChange={(e) => setUserName(e.target.value)} />
         <input type="text" placeholder="User ID" value={userId} onChange={(e) => setUserId(e.target.value)} /> {/* Input for user ID */}
         <input type="number" placeholder="Initial Supply" value={initialSupply} onChange={(e) => setInitialSupply(e.target.value)} /> {/* Input for initial supply */}
+        <input type="email" placeholder="Mail ID" value={mailId} onChange={(e) => setMailId(e.target.value)} /> {/* Input for mail ID */}
         <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleAddUser}>Add User</button>
       </div>
       <div style={{ marginBottom: '20px' }}>

@@ -45,15 +45,16 @@ export const checkOut = async (bookId) => {
   // await transaction.wait(); // Wait for transaction to be mined
 };
 
-export const addUser = async (name, userId, initialSupply) => {
+export const addUser = async (name, userId, initialSupply, mailId) => {
   const initSupply = parseUnits(initialSupply, 18);
   console.log("ini sup : ", name);
   console.log("user id : ", userId);
   console.log("contract addr : ", initSupply);
+  console.log("mail id : ", mailId);
   const maxBal = await libToken.balanceOf(signer.address);
   console.log("max bal : ", maxBal);
   await libToken.approve(contractInstance.target, maxBal);
-  await contractInstance.addUser(name, userId, initSupply);
+  await contractInstance.addUser(name, userId, initSupply, mailId);
 };
 
 export const returnBook = async (bookId) => {
@@ -79,4 +80,9 @@ export const transferToken = async (userAddress, transferToAddress, transferAmou
   console.log("amount to transfer : ", amt);
   await libToken.transfer(transferToAddress, amt);
   return true;
+}
+
+export const getMailid = async (userAddress) => {
+  const mailId = await contractInstance.getMailId(userAddress);
+  return mailId;
 }
