@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ethers, parseEther, formatEther, formatUnits } from 'ethers';
 // import nodemailer from 'nodemailer';
-import { addBook, getBookInfo, checkOut, addUser, returnBook, getUserBorrowedBooks, getBalance, transferToken, getBookPrice, getMailid } from './LibraryContract';
+import { addBook, getBookInfo, checkOut, addUser, returnBook, getUserBorrowedBooks, 
+  getBalance, transferToken, getBookPrice, getMailid, blockUser, unblockUser, transferBook } from './LibraryContract';
 import emailjs from '@emailjs/browser';
 
 
@@ -30,10 +31,23 @@ function App() {
 
   const [loading, setLoading] = useState(false);
 
+  const [blockAddress, setBlockAddress] = useState('');
+  const [unblockAddress, setUnblockAddress] = useState('');
+
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+
+  const [bookIdTransfer, setBookIdTransfer] = useState('');
+  const [transferBookToAddress, setTransferBookToAddress] = useState('');
+
   useEffect(() => {
     console.log("use effect ");
     emailjs.init("DjaBDDmfTRcep4wj1");
+    document.body.style.backgroundColor = '#0c0942';
   });
+
+  const toggleAdminMenu = () => {
+    setAdminMenuOpen(!adminMenuOpen);
+  };
 
   //test 27/4/24
   const connectWallet = async () => {
@@ -109,7 +123,7 @@ function App() {
 
   const handleReturnBook = async () => {
     try {
-      await returnBook(bookId, );
+      await returnBook(bookId);
       alert("Successfully returned book");
     } catch(error) {
       alert("Error in returning book...");
@@ -164,6 +178,36 @@ function App() {
     
   };
 
+  const handleBlockUser = async () => {
+    try {
+      await blockUser(blockAddress);
+      alert('User successfully blocked');
+    } catch (error) {
+      console.error('Error blocking user:', error);
+      alert('Error blocking user. Please try again.');
+    }
+  };
+
+  const handleUnblockUser = async () => {
+    try {
+      await unblockUser(unblockAddress);
+      alert('User successfully unblocked');
+    } catch (error) {
+      console.error('Error unblocking user:', error);
+      alert('Error unblocking user. Please try again.');
+    }
+  };
+
+  const handleTransferBook = async () => {
+    try {
+      await transferBook(bookIdTransfer, transferToAddress);
+      alert(`Successfully transferred book ${bookIdTransfer} to ${transferToAddress}`);
+    } catch(error) {
+      console.error('Error transferring book:', error);
+      alert('Error transferring book. Please try again.');
+    }
+  };
+
   async function sendMail(toMailAddress){
     console.log("inside send mail");
         const serviceId = "service_lxkhfj8";
@@ -189,6 +233,12 @@ function App() {
       <header style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
         <h1 style={{color: '#94e8ff', textAlign: 'center'}}>Library Management DApp </h1>
         <div style={{textAlign: 'right'}}>
+        <button 
+            style={{padding: '10px 20px', backgroundColor: '#ff5733', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', marginRight: '10px' }} 
+            onClick={toggleAdminMenu}
+          >
+            {adminMenuOpen ? 'Go to User' : 'Go to Admin'}
+          </button>
           {!walletConnected ? (
             <button style={{padding: '10px 20px', backgroundColor: '#6760e6', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={connectWallet}>Connect Wallet</button>
           ) : (
@@ -196,52 +246,62 @@ function App() {
           )}
         </div>
       </header>
-      <div style={{ marginBottom: '20px' }}>
+      {adminMenuOpen && (<><div style={{ marginBottom: '20px' }}>
         <input type="text" placeholder="Book Title" value={bookTitle} onChange={(e) => setBookTitle(e.target.value)} />
         <input type="number" placeholder="Price" value={bookPrice} onChange={(e) => setBookPrice(e.target.value)} />
         <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleAddBook}>Add Book</button>
+      </div><div style={{ marginBottom: '20px' }}>
+          <input type="text" placeholder="User Name" value={userName} onChange={(e) => setUserName(e.target.value)} />
+          <input type="text" placeholder="User ID" value={userId} onChange={(e) => setUserId(e.target.value)} /> {/* Input for user ID */}
+          <input type="number" placeholder="Initial Supply" value={initialSupply} onChange={(e) => setInitialSupply(e.target.value)} /> {/* Input for initial supply */}
+          <input type="email" placeholder="Mail ID" value={mailId} onChange={(e) => setMailId(e.target.value)} /> {/* Input for mail ID */}
+          <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleAddUser}>Add User</button>
+        </div>
+        <div style={{ marginBottom: '20px' }}>
+        <input type="text" placeholder="User Address to Block" value={blockAddress} onChange={(e) => setBlockAddress(e.target.value)} />
+        <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleBlockUser}>Block User</button>
       </div>
       <div style={{ marginBottom: '20px' }}>
-        <input type="text" placeholder="User Name" value={userName} onChange={(e) => setUserName(e.target.value)} />
-        <input type="text" placeholder="User ID" value={userId} onChange={(e) => setUserId(e.target.value)} /> {/* Input for user ID */}
-        <input type="number" placeholder="Initial Supply" value={initialSupply} onChange={(e) => setInitialSupply(e.target.value)} /> {/* Input for initial supply */}
-        <input type="email" placeholder="Mail ID" value={mailId} onChange={(e) => setMailId(e.target.value)} /> {/* Input for mail ID */}
-        <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleAddUser}>Add User</button>
-      </div>
-      <div style={{ marginBottom: '20px' }}>
+        <input type="text" placeholder="User Address to Unblock" value={unblockAddress} onChange={(e) => setUnblockAddress(e.target.value)} />
+        <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleUnblockUser}>Unblock User</button>
+      </div></>)}
+      
+      {!adminMenuOpen && (<><div style={{ marginBottom: '20px' }}>
         <input type="text" placeholder="Book ID" value={bookId} onChange={(e) => setBookId(e.target.value)} />
         <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleGetBookInfo}>Get Book Info</button>
         <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleCheckOut}>Issue Book</button> {/* New button for checkout */}
         <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleReturnBook}>Return Book</button> {/* New button for returning book */}
-      </div>
-      <div style={{ marginBottom: '20px' }}>
-        {/* <pre>{JSON.stringify(bookInfo, null, 2)}</pre> */}
-        <pre style={{color: '#fff'}}><span style={{color: "#cfcccf", fontFamily: 'sans-serif'}}>Book name : </span>{bookInfo[1]}</pre>
-        <pre style={{color: '#fff'}}><span style={{color: "#cfcccf", fontFamily: 'sans-serif'}}>Current holder : </span>{bookInfo[2]}</pre>
-        <pre style={{color: '#fff'}}><span style={{color: "#cfcccf", fontFamily: 'sans-serif'}}>Price : </span>{bPrice}</pre>
-      </div>
-      <div style={{ marginBottom: '20px' }}>
-        <input type="text" placeholder="User Address" value={userAddr} onChange={(e) => setUserAddr(e.target.value)} />
-        <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleGetUserBorrowedBooks}>Get User Borrowed Books</button>
-      </div>
-      <div>
-        <h2 style={{color: '#adacad'}}>Borrowed Books:</h2>
-        <ul style={{color: '#fff'}}>
-          {borrowedBooksInfo.map((bookInfo, index) => (
-            <li key={index}>{bookInfo}</li>
-          ))}
-        </ul>
-      </div>
-      <div style={{ marginBottom: '20px' }}>
-        <input type="text" placeholder="Token Balance Address" value={tokenBalanceAddress} onChange={(e) => setTokenBalanceAddress(e.target.value)} />
-        <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleGetTokenBalance}>Get Token Balance</button>
-        <h2 style={{color: '#adacad'}}>Balance: {Number(balance)}</h2>
-      </div>
-      <div style={{ marginBottom: '20px' }}>
+      </div><div style={{ marginBottom: '20px' }}>
+          {/* <pre>{JSON.stringify(bookInfo, null, 2)}</pre> */}
+          <pre style={{ color: '#fff' }}><span style={{ color: "#cfcccf", fontFamily: 'sans-serif' }}>Book name : </span>{bookInfo[1]}</pre>
+          <pre style={{ color: '#fff' }}><span style={{ color: "#cfcccf", fontFamily: 'sans-serif' }}>Current holder : </span>{bookInfo[2]}</pre>
+          <pre style={{ color: '#fff' }}><span style={{ color: "#cfcccf", fontFamily: 'sans-serif' }}>Price : </span>{bPrice}</pre>
+        </div><div style={{ marginBottom: '20px' }}>
+          <input type="text" placeholder="User Address" value={userAddr} onChange={(e) => setUserAddr(e.target.value)} />
+          <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleGetUserBorrowedBooks}>Get User Borrowed Books</button>
+        </div><div>
+          <h2 style={{ color: '#adacad' }}>Borrowed Books:</h2>
+          <ul style={{ color: '#fff' }}>
+            {borrowedBooksInfo.map((bookInfo, index) => (
+              <li key={index}>{bookInfo}</li>
+            ))}
+          </ul>
+        </div><div style={{ marginBottom: '20px' }}>
+          <input type="text" placeholder="Token Balance Address" value={tokenBalanceAddress} onChange={(e) => setTokenBalanceAddress(e.target.value)} />
+          <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleGetTokenBalance}>Get Token Balance</button>
+          <h2 style={{ color: '#adacad' }}>Balance: {Number(balance)}</h2>
+        </div><div style={{ marginBottom: '20px' }}>
+          <input type="text" placeholder="Transfer To Address" value={transferToAddress} onChange={(e) => setTransferToAddress(e.target.value)} />
+          <input type="number" placeholder="Transfer Amount" value={transferAmount} onChange={(e) => setTransferAmount(e.target.value)} />
+          <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleTransferTokens}>Transfer Tokens</button>
+        </div>
+        <div style={{ marginBottom: '20px' }}>
+        <input type="text" placeholder="Book ID" value={bookIdTransfer} onChange={(e) => setBookIdTransfer(e.target.value)} />
         <input type="text" placeholder="Transfer To Address" value={transferToAddress} onChange={(e) => setTransferToAddress(e.target.value)} />
-        <input type="number" placeholder="Transfer Amount" value={transferAmount} onChange={(e) => setTransferAmount(e.target.value)} />
-        <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleTransferTokens}>Transfer Tokens</button>
-      </div>
+        <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleTransferBook}>Transfer Book</button>
+        </div>
+        </>)}
+      
     </div>
   );
 }

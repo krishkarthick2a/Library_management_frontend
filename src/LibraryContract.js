@@ -9,12 +9,12 @@ const signer = await provider.getSigner();
 console.log("signer :", await provider.getSigner());
 
 // const libAddress = "0xB7e2038753547602893c9a4c7C9D5CCE358b93b3";//test hardhat
-const libAddress = "0xE6FC2DCE7B51ca21F0E7de8d1a9931b6cC218e68";//test hardhat
+const libAddress = "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1";//test hardhat
 const libToken = new ethers.Contract(libAddress, tokenABI, signer);
 
 // const contractAddress = '0x612721395Dcf3A14B5535C3617f89929864E76aB'; // Replace with actual contract address
 // const contractAddress = "0x6d92Cf4bD6205cFd7C1309D6EBA65A11D8c49ce7"; //test hardhat
-const contractAddress = "0x6f86125802c4D4d5890Caf39751e15281F6aF1E4"; //test hardhat
+const contractAddress = "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE"; //test hardhat
 const contractInstance = new ethers.Contract(contractAddress, LibraryContractABI, signer);
 // await contractInstance.wait();
 
@@ -39,10 +39,11 @@ export const addBook = async (title, bookPrice) => {
 export const checkOut = async (bookId) => {
   console.log("test : ", bookId);
   const bookprice = await contractInstance.books(bookId);
+  console.log("check out book id : ", bookId);
   console.log("book details inside issue book : ", bookprice.price);
   await libToken.approve(contractInstance.target, bookprice.price);
   const transaction = await contractInstance.BookIssue(bookId);
-  // await transaction.wait(); // Wait for transaction to be mined
+  await transaction.wait(); // Wait for transaction to be mined
 };
 
 export const addUser = async (name, userId, initialSupply, mailId) => {
@@ -58,6 +59,9 @@ export const addUser = async (name, userId, initialSupply, mailId) => {
 };
 
 export const returnBook = async (bookId) => {
+  console.log("return : ",  bookId);
+  const bookprice = await contractInstance.books(bookId);
+  await libToken.approve(contractInstance.target, bookprice.price);
   const transaction = await contractInstance.returnBook(bookId);
   await transaction.wait(); // Wait for transaction to be mined
 };
@@ -86,3 +90,15 @@ export const getMailid = async (userAddress) => {
   const mailId = await contractInstance.getMailId(userAddress);
   return mailId;
 }
+
+export const blockUser = async (address) => {
+  await contractInstance.blockUser(address);
+};
+
+export const unblockUser = async (address) => {
+  await contractInstance.unBlockUser(address);
+};
+
+export const transferBook = async (bookId, toAddress) => {
+  await contractInstance.transferBook(bookId, toAddress);
+};
