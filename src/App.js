@@ -200,7 +200,7 @@ function App() {
 
   const handleTransferBook = async () => {
     try {
-      await transferBook(bookIdTransfer, transferToAddress);
+      await transferBook(bookIdTransfer, transferBookToAddress);
       alert(`Successfully transferred book ${bookIdTransfer} to ${transferToAddress}`);
     } catch(error) {
       console.error('Error transferring book:', error);
@@ -297,7 +297,7 @@ function App() {
         </div>
         <div style={{ marginBottom: '20px' }}>
         <input type="text" placeholder="Book ID" value={bookIdTransfer} onChange={(e) => setBookIdTransfer(e.target.value)} />
-        <input type="text" placeholder="Transfer To Address" value={transferToAddress} onChange={(e) => setTransferToAddress(e.target.value)} />
+        <input type="text" placeholder="Transfer To Address" value={transferToAddress} onChange={(e) => setTransferBookToAddress(e.target.value)} />
         <button style={{ marginLeft: '10px', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }} onClick={handleTransferBook}>Transfer Book</button>
         </div>
         </>)}
